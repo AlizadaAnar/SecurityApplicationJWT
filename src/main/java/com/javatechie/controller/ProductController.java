@@ -16,7 +16,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -26,6 +32,7 @@ public class ProductController {
 
     @Autowired
     private ProductService service;
+
     @Autowired
     private JwtService jwtService;
 
@@ -37,8 +44,17 @@ public class ProductController {
 
 
     @PostMapping("/signUp")
-    public String addNewUser(@RequestBody UserInfo userInfo) {
-        return service.addUser(userInfo);
+    public ResponseEntity<UserInfo> addNewUser(@RequestBody UserInfo userInfo) {
+        return ResponseEntity.ok(service.addUser(userInfo));
+    }
+
+    @GetMapping("/getUserById/{id}")
+    public ResponseEntity<UserInfo> getUserById(@PathVariable int id, Authentication authentication) {
+        UserInfo userInfo = service.getUserById(id);
+        if (userInfo == null || !userInfo.getName().equals(authentication.getName())) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(userInfo);
     }
 
     @GetMapping("/all")
@@ -47,16 +63,25 @@ public class ProductController {
         return service.getProducts();
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
-    public Product getProductById(@PathVariable int id) {
-        return service.getProduct(id);
+//    @GetMapping("/{id}")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    public Product getProductById(@PathVariable int id, Authentication authentication) {
+//        Product product = service.getProduct(id);
+//        if(product == null || product.getName())
+//    }
+
+
+    @GetMapping("/productName")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    public Product getProductByName(@RequestParam String name) {
+        return service.getProductByName(name);
     }
 
 
     @PostMapping("/login")
     public JwtResponse authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         if (authentication.isAuthenticated()) {
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
             return JwtResponse.builder()

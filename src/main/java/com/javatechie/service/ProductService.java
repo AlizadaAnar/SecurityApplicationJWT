@@ -47,10 +47,20 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("product " + id + " not found"));
     }
 
+    public Product getProductByName(String name) {
+        return productList.stream()
+                .filter(product -> product.getName().equals(name))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("product with name: -" + name + "- not found"));
+    }
 
-    public String addUser(UserInfo userInfo) {
+
+    public UserInfo addUser(UserInfo userInfo) {
         userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
-        repository.save(userInfo);
-        return "user added to system ";
+        return repository.save(userInfo);
+    }
+
+    public UserInfo getUserById(int id) {
+        return repository.findById(id).orElse(null);
     }
 }
