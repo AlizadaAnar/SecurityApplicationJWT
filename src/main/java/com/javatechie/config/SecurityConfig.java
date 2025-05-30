@@ -1,10 +1,8 @@
 package com.javatechie.config;
 
 import com.javatechie.filter.JwtAuthFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -12,7 +10,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,52 +21,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Autowired
-    private JwtAuthFilter authFilter;
+
+    private final JwtAuthFilter authFilter;
+
+    public SecurityConfig(JwtAuthFilter authFilter) {
+        this.authFilter = authFilter;
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return new UserInfoUserDetailsService();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions().sameOrigin()) // ✅ allow H2 frames
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/products/signUp", "/products/login", "/products/refreshToken", "/h2-console/**").permitAll()
-                        .requestMatchers("/products/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/products/getUserById/{id}").authenticated()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf().disable()
+                .headers(headers -> headers.frameOptions().sameOrigin())
+                .authorizeHttpRequests()
+                .requestMatchers("/products/signUp", "/products/login", "/products/refreshToken").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
-
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        return http.csrf().disable()
-//                .headers(headers -> headers.frameOptions().sameOrigin())
-//                .authorizeHttpRequests()
-//                .requestMatchers("/products/signUp", "/products/login", "/products/refreshToken")
-//                .permitAll()
-//                .requestMatchers("/h2-console/**").permitAll()
-//                .requestMatchers("/products/**").authenticated()
-//                .requestMatchers(HttpMethod.GET, "/products/getUserById/{id}").authenticated()
-//                .and()
-//                .sessionManagement()
-//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and()
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
-
-    //requestMatchers(HttpMethod.GET, "/api/users/{id}").authenticated()  // Any authenticated user can view own data, requires a valid token
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -95,3 +75,4 @@ public class SecurityConfig {
 //    }
 
 }
+

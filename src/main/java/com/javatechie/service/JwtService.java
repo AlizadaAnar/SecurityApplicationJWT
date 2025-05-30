@@ -3,7 +3,6 @@ package com.javatechie.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,9 +17,7 @@ import java.util.function.Function;
 @Component
 public class JwtService {
 
-
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
-
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -35,6 +32,10 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+    /*
+    This method takes:
+    - signinKey and Authority(user or admin)
+    */
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
@@ -53,7 +54,6 @@ public class JwtService {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-
     public String generateToken(String userName){
         Map<String,Object> claims=new HashMap<>();
         return createToken(claims,userName);
@@ -64,7 +64,7 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+1000*60*2))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 300))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 

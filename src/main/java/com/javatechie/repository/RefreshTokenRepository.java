@@ -1,5 +1,6 @@
 package com.javatechie.repository;
 
+
 import com.javatechie.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -4,7 +4,6 @@ import com.javatechie.dto.Product;
 import com.javatechie.entity.UserInfo;
 import com.javatechie.repository.UserInfoRepository;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +17,14 @@ public class ProductService {
 
     List<Product> productList = null;
 
-    @Autowired
-    private UserInfoRepository repository;
+    private final UserInfoRepository repository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
+    public ProductService(UserInfoRepository repository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @PostConstruct
     public void loadProductsFromDB() {
@@ -53,7 +55,6 @@ public class ProductService {
                 .findAny()
                 .orElseThrow(() -> new RuntimeException("product with name: -" + name + "- not found"));
     }
-
 
     public UserInfo addUser(UserInfo userInfo) {
         userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
