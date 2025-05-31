@@ -4,6 +4,7 @@ import com.javah.dto.Product;
 import com.javah.entity.UserInfo;
 import com.javah.repository.UserInfoRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,9 +18,11 @@ public class ProductService {
     List<Product> productList = null;
 
     private final UserInfoRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public ProductService(UserInfoRepository repository) {
+    public ProductService(UserInfoRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostConstruct
@@ -53,6 +56,7 @@ public class ProductService {
     }
 
     public UserInfo addUser(UserInfo userInfo) {
+        userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
         return repository.save(userInfo);
     }
 
